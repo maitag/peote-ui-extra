@@ -76,7 +76,8 @@ class UIAreaList extends UIArea implements ParentElement
 		
 		super.add(child);
 		
-		if (addResizeInternEvent) child.setOnResizeHeightIntern(child, updateChildOnResizeHeight); 
+		// TODO: this maybe for text-elements later
+		if (addResizeInternEvent) child.setOnResizeHeightIntern(child, updateChildOnResizeHeight);
 		
 	}
 	
@@ -105,19 +106,23 @@ class UIAreaList extends UIArea implements ParentElement
 		// detect where is text-elements what have autosize and is zero before added
 		if ( _firstTimeAdded && height == deltaHeight && isTextChild(child) ) return;
 
-		// TODO:
-
 		var childIndex:Int = childs.indexOf(child);
 		if (childIndex < 0) return;
 
-		child.maskByElement(this, maskSpace);
-		// if ( Type.getClassName(Type.getClass(child)).indexOf("peote.ui.interactive.UITextPage")<0 )
-		child.updateLayout();
+
+		// TODO: glitchy/hacky here with textfields:
+
+		if ( ! (height == deltaHeight && isTextChild(child)) )
+			child.maskByElement(this, maskSpace);
+
+		// if (child.isVisible)
+		if ( ! (height == deltaHeight && isTextChild(child)) )
+			child.updateLayout(); // Problem if it is a masked textfield and triggers this before gets visible (and triggers its onresize event)
 		
-		// Problem if it is a textfield and the inner is not added to Display
 		moveChildsByOffset(childIndex+1, deltaHeight);
 
 		innerBottom += deltaHeight;
+		
 		if (_onResizeInnerHeight != null) _onResizeInnerHeight(this, innerHeight, deltaHeight); // TODO: extra event for this!
 		if (onResizeInnerHeight != null) onResizeInnerHeight(this, innerHeight, deltaHeight);
 	}
@@ -125,7 +130,7 @@ class UIAreaList extends UIArea implements ParentElement
 	function moveChildsByOffset(fromIndex:Int, offset:Int) {
 		for (i in fromIndex...childs.length) {
 			childs[i].y += offset;
-			// if (childs[i].isVisible) {
+			//  if (childs[i].isVisible) {
 				childs[i].maskByElement(this, maskSpace);
 				childs[i].updateLayout();
 			// }
