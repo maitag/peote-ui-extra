@@ -8,10 +8,14 @@ import peote.ui.interactive.interfaces.ParentElement;
 
 class UIAreaList extends UIArea implements ParentElement
 {
+	// TODO: setter here to update layout
+	var horizontal:Bool = false;
 
 	public function new(xPosition:Int, yPosition:Int, width:Int, height:Int, zIndex:Int = 0, ?config:AreaListConfig)
-	{		
+	{	
 		super(xPosition, yPosition, width, height, zIndex, config);
+
+		horizontal = config.horizontal;
 		
 		// ------------------------------------
 		// --------- RESIZE HANDLING ----------		
@@ -21,13 +25,16 @@ class UIAreaList extends UIArea implements ParentElement
 	
 		setOnResizeWidthIntern(this, function(_,_,_) {
 			for (child in childs) {
-				child.width = this.width-((maskSpace != null) ? maskSpace.left + maskSpace.right : 0);
+				if (horizontal)
+					child.height = this.height-((maskSpace != null) ? maskSpace.top + maskSpace.bottom : 0);
+				else
+					child.width = this.width-((maskSpace != null) ? maskSpace.left + maskSpace.right : 0);
 				// child.maskByElement(this);
 				// child.updateLayout();
 			}
 		});
 
-		// this._onResizeHeight = (_, height:Int, deltaHeight:Int) -> {}
+		// this._onResizeHeight = (_, height:Int, delta:Int) -> {}
 	}
 
 	function isTextChild(child):Bool {
@@ -51,7 +58,10 @@ class UIAreaList extends UIArea implements ParentElement
 		if (_firstTimeAdded) {
 			_firstTimeAdded = false;
 			for (child in _autosizedChilds) {
-				updateChildOnResizeHeight(child, 0, child.height);
+				if (horizontal)
+					updateChildOnResize(child, 0, child.width);
+				else
+					updateChildOnResize(child, 0, child.height);
 			}
 			_autosizedChilds = null;		
 		}
@@ -64,21 +74,34 @@ class UIAreaList extends UIArea implements ParentElement
 	override public function add(child:Interactive) _add(child, false);
 	function _add(child:Interactive, addResizeInternEvent:Bool)
 	{
-		child.x = 0;
-		child.width = width - ((maskSpace != null) ? maskSpace.left + maskSpace.right : 0);
-
-		if (childs.length == 0) {
+		if (horizontal) {
 			child.y = 0;
+			child.height = height - ((maskSpace != null) ? maskSpace.top + maskSpace.bottom : 0);
 		}
 		else {
-			child.y = childs[childs.length-1].bottom - y - ((maskSpace != null) ? maskSpace.top : 0);
+			child.x = 0;
+			child.width = width - ((maskSpace != null) ? maskSpace.left + maskSpace.right : 0);
+		}
+
+		if (childs.length == 0) {
+			if (horizontal) child.y = 0; else child.x = 0;
+		}
+		else {
+			if (horizontal)
+				child.x = childs[childs.length-1].right - x - ((maskSpace != null) ? maskSpace.left : 0);
+			else 
+				child.y = childs[childs.length-1].bottom - y - ((maskSpace != null) ? maskSpace.top : 0);
 		}
 		
 		super.add(child);
 		
 		// TODO: this maybe for text-elements later
-		if (addResizeInternEvent) child.setOnResizeHeightIntern(child, updateChildOnResizeHeight);
-		
+		if (addResizeInternEvent) {
+			if (horizontal)
+				child.setOnResizeHeightIntern(child, updateChildOnResize);
+			else 
+				child.setOnResizeWidthIntern(child, updateChildOnResize);
+		}
 	}
 	
 	override public function remove(child:Interactive)
@@ -89,8 +112,8 @@ class UIAreaList extends UIArea implements ParentElement
 			
 		}
 		else {
-			var yOff = child.height;
-			moveChildsByOffset(index+1, -yOff);
+			var offset = (horizontal) ? child.width : child.height;
+			moveChildsByOffset(index+1, -offset);
 		}
 
 		// TODO: remove resize-handler if there was added some!
@@ -101,10 +124,10 @@ class UIAreaList extends UIArea implements ParentElement
 
 	// -----------------------------------------------------------
 
-	public function updateChildOnResizeHeight(child:Interactive, height:Int, deltaHeight:Int)
+	public function updateChildOnResize(child:Interactive, size:Int, delta:Int)
 	{
 		// detect where is text-elements what have autosize and is zero before added
-		if ( _firstTimeAdded && height == deltaHeight && isTextChild(child) ) return;
+		if ( _firstTimeAdded && size == delta && isTextChild(child) ) return;
 
 		var childIndex:Int = childs.indexOf(child);
 		if (childIndex < 0) return;
@@ -112,24 +135,34 @@ class UIAreaList extends UIArea implements ParentElement
 
 		// TODO: glitchy/hacky here with textfields:
 
-		if ( ! (height == deltaHeight && isTextChild(child)) )
+		if ( ! (size == delta && isTextChild(child)) )
 			child.maskByElement(this, maskSpace);
 
 		// if (child.isVisible)
-		if ( ! (height == deltaHeight && isTextChild(child)) )
+		if ( ! (size == delta && isTextChild(child)) )
 			child.updateLayout(); // Problem if it is a masked textfield and triggers this before gets visible (and triggers its onresize event)
 		
-		moveChildsByOffset(childIndex+1, deltaHeight);
+		moveChildsByOffset(childIndex+1, delta);
 
-		innerBottom += deltaHeight;
-		
-		if (_onResizeInnerHeight != null) _onResizeInnerHeight(this, innerHeight, deltaHeight); // TODO: extra event for this!
-		if (onResizeInnerHeight != null) onResizeInnerHeight(this, innerHeight, deltaHeight);
+		if (horizontal) {
+			innerRight += delta;	
+			if (_onResizeInnerWidth != null) _onResizeInnerWidth(this, innerWidth, delta); // TODO: extra event for this!
+			if (onResizeInnerWidth != null) onResizeInnerWidth(this, innerWidth, delta);
+		}
+		else {
+			innerBottom += delta;	
+			if (_onResizeInnerHeight != null) _onResizeInnerHeight(this, innerHeight, delta); // TODO: extra event for this!
+			if (onResizeInnerHeight != null) onResizeInnerHeight(this, innerHeight, delta);
+		}
 	}
 	
 	function moveChildsByOffset(fromIndex:Int, offset:Int) {
 		for (i in fromIndex...childs.length) {
-			childs[i].y += offset;
+			if (horizontal) 
+				childs[i].x += offset;
+			else
+				childs[i].y += offset;
+
 			//  if (childs[i].isVisible) {
 				childs[i].maskByElement(this, maskSpace);
 				childs[i].updateLayout();
