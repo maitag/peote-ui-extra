@@ -10,12 +10,14 @@ class UIAreaList extends UIArea implements ParentElement
 {
 	// TODO: setter here to update layout
 	var horizontal:Bool = false;
+	var gap:Int = 0;
 
 	public function new(xPosition:Int, yPosition:Int, width:Int, height:Int, zIndex:Int = 0, ?config:AreaListConfig)
 	{	
 		super(xPosition, yPosition, width, height, zIndex, config);
 
 		horizontal = config.horizontal;
+		gap = config.gap;
 		
 		// ------------------------------------
 		// --------- RESIZE HANDLING ----------		
@@ -88,9 +90,9 @@ class UIAreaList extends UIArea implements ParentElement
 		}
 		else {
 			if (horizontal)
-				child.x = childs[childs.length-1].right - x - ((maskSpace != null) ? maskSpace.left : 0);
+				child.x = gap + childs[childs.length-1].right - x - ((maskSpace != null) ? maskSpace.left : 0);
 			else 
-				child.y = childs[childs.length-1].bottom - y - ((maskSpace != null) ? maskSpace.top : 0);
+				child.y = gap + childs[childs.length-1].bottom - y - ((maskSpace != null) ? maskSpace.top : 0);
 		}
 		
 		super.add(child);
@@ -159,9 +161,9 @@ class UIAreaList extends UIArea implements ParentElement
 	function moveChildsByOffset(fromIndex:Int, offset:Int) {
 		for (i in fromIndex...childs.length) {
 			if (horizontal) 
-				childs[i].x += offset;
+				childs[i].x += offset + gap;
 			else
-				childs[i].y += offset;
+				childs[i].y += offset + gap;
 
 			//  if (childs[i].isVisible) {
 				childs[i].maskByElement(this, maskSpace);

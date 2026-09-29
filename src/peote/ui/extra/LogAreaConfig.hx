@@ -8,7 +8,7 @@ import peote.ui.config.Space;
 import peote.ui.config.Align;
 
 @:structInit
-private class AreaListConfigImpl
+private class LogAreaConfigImpl
 {
 	public var backgroundStyle:Style = null;	
 	public var backgroundSpace:Space = null;
@@ -23,13 +23,8 @@ private class AreaListConfigImpl
 	public var minHeight:Int = 10;
 	public var maxHeight:Int = 2000;
 
-	// this is a new one for "UIAreaList"
-	public var horizontal:Bool = false;
-	public var gap:Int = 0;
-
-	// TODO:
+	// this is a new for LogAreaConfig
 	public var hAlign:Align = Align.CENTER;
-	public var vAlign:Align = Align.CENTER;
 	
 /*	public function new() 
 	{
@@ -41,7 +36,7 @@ private class AreaListConfigImpl
 
 @:structInit
 @:forward
-abstract AreaListConfig(AreaListConfigImpl) from AreaListConfigImpl to AreaListConfigImpl
+abstract LogAreaConfig(LogAreaConfigImpl) from LogAreaConfigImpl to LogAreaConfigImpl
 {
 	//inline function new(c:AreaListConfigImpl) {
 		//this = c;
@@ -86,7 +81,7 @@ abstract AreaListConfig(AreaListConfigImpl) from AreaListConfigImpl to AreaListC
 
 	
 	@:from
-	static public inline function fromStyle(s:Style):AreaListConfig {
+	static public inline function fromStyle(s:Style):LogAreaConfig {
 		return { backgroundStyle:s };
 	}
 
