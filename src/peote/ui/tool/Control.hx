@@ -85,9 +85,12 @@ class Control extends PeoteUIDisplay
 	
 	var rootSliderConfig:SliderConfig;
 	var sliderConfig:SliderConfig;
+
+	var fontFile:String;
 	
-	public function new(title:String, x:Int, y:Int, width:Int, height:Int, color:Color=0x00000000, controlItems:Array<ControlItem>) {
+	public function new(title:String, fontFile:String, x:Int, y:Int, width:Int, height:Int, color:Color=0x00000000, controlItems:Array<ControlItem>) {
 		this.title = title;
+		this.fontFile = fontFile;
 		this.controlItems = controlItems;
 		super(x, y, width, height, color);
 	}
@@ -102,7 +105,7 @@ class Control extends PeoteUIDisplay
 
 			setDragArea(0, 0, peoteView.width, peoteView.height);
 
-			new Fnt("assets/font/hack_ascii_small.json").load( init );
+			new Fnt(fontFile).load( init );
 		}
 
 	}	
