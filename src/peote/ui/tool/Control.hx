@@ -66,6 +66,8 @@ class Control extends PeoteUIDisplay
 	// specific styles
 	var checkboxBgStyleTrue:Style;
 	var checkboxBgStyleFalse:Style;
+	var radioBgStyleTrue:Style;
+	var radioBgStyleFalse:Style;
 	
 	// ---- Configs -----	
 	var rootConfig:AreaListConfig;
@@ -82,6 +84,7 @@ class Control extends PeoteUIDisplay
 	var textOutputConfig:TextConfig;
 	
 	var textCheckboxConfig:TextConfig;
+	var textRadioConfig:TextConfig;
 	
 	var rootSliderConfig:SliderConfig;
 	var sliderConfig:SliderConfig;
@@ -95,6 +98,8 @@ class Control extends PeoteUIDisplay
 		super(x, y, width, height, color);
 	}
 
+	public static function round(n:Float, ?roundAt:Int):Float return (roundAt==null || roundAt < 0) ? n : Math.round(n * Math.pow(10, roundAt)) / Math.pow(10, roundAt);
+
 	override public function addToPeoteView(peoteView:PeoteView, ?atDisplay:Display, addBefore:Bool=false)
 	{
 		super.addToPeoteView(peoteView, atDisplay, addBefore);
@@ -102,9 +107,7 @@ class Control extends PeoteUIDisplay
 		if (!isAdded)
 		{
 			isAdded = true;
-
 			setDragArea(0, 0, peoteView.width, peoteView.height);
-
 			new Fnt(fontFile).load( init );
 		}
 
@@ -219,6 +222,14 @@ class Control extends PeoteUIDisplay
 			textSpace: {top:2, bottom:2}
 		};
 
+		radioBgStyleFalse = roundBorderStyle.copy(0x2b100aff-0x44);
+		radioBgStyleTrue = roundBorderStyle.copy(0x042004cc);
+		textRadioConfig = {
+			backgroundStyle:radioBgStyleFalse,
+			hAlign:HAlign.CENTER,
+			textSpace: {top:2, bottom:2}
+		};
+
 
 		rootSliderConfig = {
 			backgroundStyle: roundBorderStyle.copy(Color.RED1-0x55, 0x00000000, 0.2),
@@ -261,7 +272,7 @@ class Control extends PeoteUIDisplay
 
 		// ---- display resizer ----
 		var resizer = new UIElement(0, height-8, width, 8, 100);
-		resizer.setDragArea(resizer.x, y+10, 0, 1000);
+		resizer.setDragArea(resizer.x, 20, 0, 1000);
 		resizer.onPointerOver = (_, _) -> peoteView.window.cursor = MouseCursor.RESIZE_NS;
 		resizer.onPointerOut  = (_, _) -> peoteView.window.cursor = MouseCursor.DEFAULT;
 		resizer.onPointerDown = (_, e) -> resizer.startDragging(e);
@@ -399,8 +410,8 @@ class Control extends PeoteUIDisplay
 				}
 				output;
 
-			case InputFloat(size, align, value, onChange):
-				if (size == null) size = 58;
+			case InputFloat(size, align, value, roundAt, onChange):
+				if (size == null) size = 46;
 				var hAlign:HAlign = switch(align) {
 					case Left:HAlign.LEFT;
 					case Right:HAlign.RIGHT;
@@ -424,11 +435,15 @@ class Control extends PeoteUIDisplay
 				}
 		
 				if (value!=null) {
-					value.onChange = function(v:Float) {input.setText(Std.string(v)); input.xOffset=0; input.hAlign=hAlign; input.update();}
+					value.onChange = function(v:Float) {
+						input.setText( Std.string(round(v, roundAt)) );
+						input.xOffset=0; input.hAlign=hAlign;
+						input.update();
+					}
 				}
 				input;
 
-			case OutputFloat(size, align, value):
+			case OutputFloat(size, align, value, roundAt):
 				if (size == null) size = 58;
 				var hAlign:HAlign = switch(align) {
 					case Left:HAlign.LEFT;
@@ -440,12 +455,16 @@ class Control extends PeoteUIDisplay
 				output.hAlign=hAlign;
 
 				if (value!=null) {
-					value.onChange = function(v:Float) {output.setText(Std.string(v)); output.xOffset=0; output.hAlign=hAlign; output.update();}
+					value.onChange = function(v:Float) {
+						output.setText( Std.string(round(v, roundAt)) );
+						output.xOffset=0; output.hAlign=hAlign;
+						output.update();}
 				}
 				output;
 
 			
 			case Checkbox(nameFalse, nameTrue, size, value, onChange):
+				if (nameTrue == null) nameTrue = nameFalse;
 				var name = nameFalse;
 				if (value!=null) {
 					if (value.value) name = nameTrue;
@@ -455,7 +474,11 @@ class Control extends PeoteUIDisplay
 				var checkbox = new TextLine(0, 0, size, 0, 2, name, font, fontStyle, textCheckboxConfig);
 				
 				if (value==null) value = new BoolValue(false);
-				else value.onChange = function(v:Bool) {checkbox.setText( (v) ? nameTrue : nameFalse );checkbox.update();}
+				else value.onChange = function(v:Bool) {
+					checkbox.setText( (v) ? nameTrue : nameFalse );
+					checkbox.backgroundStyle = (v) ? checkboxBgStyleTrue : checkboxBgStyleFalse;
+					checkbox.update();
+				}
 
 				checkbox.onPointerClick = function(b, e) {
 					value.value = !value.value;
@@ -465,6 +488,34 @@ class Control extends PeoteUIDisplay
 					if (onChange!=null) onChange(value.value);
 				}
 				checkbox;
+						
+			case RadioButton(nameOff, nameOn, size, value, id, onChange):
+				if (nameOn == null) nameOn = nameOff;
+				var name = nameOff;
+				if (value.value == id) {
+					name = nameOn;
+					textRadioConfig.backgroundStyle = radioBgStyleTrue;
+				} 
+				else textRadioConfig.backgroundStyle = radioBgStyleFalse;
+				
+				var radioButton = new TextLine(0, 0, size, 0, 2, name, font, fontStyle, textRadioConfig);
+				
+				value.onChangeArray.push( function(v:Int) {
+					radioButton.setText( (v==id) ? nameOn : nameOff );
+					radioButton.backgroundStyle = (v==id) ? radioBgStyleTrue : radioBgStyleFalse;
+					radioButton.update();
+				} );
+
+				radioButton.onPointerClick = function(b, e) {
+					if (value.value != id) {
+						value.value = id;
+						radioButton.setText( nameOn );
+						radioButton.backgroundStyle = radioBgStyleTrue;
+						radioButton.update();
+						if (onChange!=null) onChange(id);
+					}
+				}
+				radioButton;
 						
 			// case HSlider(name, size, value, valueStart, valueEnd, onChange) | VSlider(name, size, value, valueStart, valueEnd, onChange):
 			case Slider(name, size, value, valueStart, valueEnd, onChange):

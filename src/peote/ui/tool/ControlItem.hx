@@ -22,10 +22,11 @@ enum ControlItem {
 	OutputString(?size:Int, ?align:Align, ?value:StringValue);
 	InputInt    (?size:Int, ?align:Align, ?value:IntValue, ?onChange:Int->Void);
 	OutputInt   (?size:Int, ?align:Align, ?value:IntValue);
-	InputFloat  (?size:Int, ?align:Align, ?value:FloatValue, ?onChange:Float->Void);
-	OutputFloat (?size:Int, ?align:Align, ?value:FloatValue);
+	InputFloat  (?size:Int, ?align:Align, ?value:FloatValue, ?roundAt:Int, ?onChange:Float->Void);
+	OutputFloat (?size:Int, ?align:Align, ?value:FloatValue, ?roundAt:Int);
 
 	Checkbox(nameFalse:String, ?nameTrue:String, ?size:Int, ?value:BoolValue, ?onChange:Bool->Void);
+	RadioButton(nameOff:String, ?nameOn:String, ?size:Int, value:RadioValue, id:Int, ?onChange:Int->Void);
 	Slider  (name:String, ?size:Int, ?value:FloatValue, ?valueStart:Float, ?valueEnd:Float, ?onChange:Float->Void);
 	// HSlider  (name:String, ?size:Int, ?value:FloatValue, ?valueStart:Float, ?valueEnd:Float, onChange:Float->Void);
 	// VSlider  (name:String, ?size:Int, ?value:FloatValue, ?valueStart:Float, ?valueEnd:Float, onChange:Float->Void);

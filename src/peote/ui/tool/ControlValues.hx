@@ -65,3 +65,22 @@ package peote.ui.tool;
 	@:to inline function toString():String return this.value;
 	// @:from static function fromFloat(v:Float):FloatValue return {value:v};
 }
+
+@:allow(peote.ui.tool.Control)
+@:structInit class _RadioValue {
+	public var value(default, set):Int = 0;
+	var onChangeArray = new Array<Int->Void>();
+	inline function set_value(v:Int) {
+		for (onChange in onChangeArray) onChange(v);
+		return value = v;
+	}
+}
+@:forward abstract RadioValue(_RadioValue) from _RadioValue to _RadioValue {
+	public inline function new(v:Int) this = {value:v}
+	@:to inline function toInt():Int return this.value;
+	@:to inline function toString():String return Std.string(this.value);
+	// @:from static function fromInt(v:Int):IntValue return {value:v};
+	// @:from static function fromString(s:String):IntValue return {value:Std.parseInt(s)};
+}
+
+
