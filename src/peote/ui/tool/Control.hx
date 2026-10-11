@@ -91,11 +91,12 @@ class Control extends PeoteUIDisplay
 
 	var fontFile:String;
 	
-	public function new(title:String, fontFile:String, x:Int, y:Int, width:Int, height:Int, color:Color=0x00000000, controlItems:Array<ControlItem>) {
+	public function new(title:String, fontFile:String, x:Int, y:Int, width:Int, height:Int, color:Color=0x000000cc, controlItems:Array<ControlItem>) {
 		this.title = title;
 		this.fontFile = fontFile;
 		this.controlItems = controlItems;
 		super(x, y, width, height, color);
+		clearDepth=true;
 	}
 
 	public static function round(n:Float, ?roundAt:Int):Float return (roundAt==null || roundAt < 0) ? n : Math.round(n * Math.pow(10, roundAt)) / Math.pow(10, roundAt);
